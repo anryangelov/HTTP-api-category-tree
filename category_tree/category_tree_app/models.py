@@ -9,9 +9,9 @@ class Category(models.Model):
         'self', on_delete=models.CASCADE, blank=True, null=True
     )
     name = models.CharField(max_length=255)
-    description = models.TextField()
-    image = models.ImageField(upload_to='uploads/%Y/%m/%d/')
-    similarity = models.ManyToManyField('self')
+    description = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to='uploads/%Y/%m/%d/', blank=True)
+    similarity = models.ManyToManyField('self', blank=True)
 
     objects = CategoryManager()
 

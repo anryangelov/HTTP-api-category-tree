@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    "rest_framework",
+
     'category_tree_app.apps.CategoryTreeAppConfig',
 ]
 
@@ -146,4 +148,8 @@ LOGGING = {
             'handlers': ['console'],
         }
     }
+}
+
+REST_FRAMEWORK = {
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
 }

@@ -39,8 +39,10 @@ class CategoryManager(models.Manager):
         ORDER BY depth, category_id
         '''
 
-    def parent_list(self, category_id, depth=-2000):
+    def parent_list(self, category_id, depth=None):
+        depth = depth or 2000
         return self.raw(self.PARENT_LIST_QUERY, [category_id, abs(depth) + 1])
 
-    def child_tree(self, category_id, depth=2000):
+    def child_tree(self, category_id, depth=None):
+        depth = depth or 2000
         return self.raw(self.CHILD_TREE_QUERY, [category_id, depth - 1])
