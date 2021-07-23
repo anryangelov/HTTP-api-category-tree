@@ -9,12 +9,19 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = [
             "category_id",
-            "parent_category_id",
+            "parent_category",
             "image",
             "name",
             "description",
             "similarities",
         ]
+
+    def validate_similarities(self, value):
+        if self.instance in value:
+            raise serializers.ValidationError(
+                "Same category is not allowed for similarity"
+            )
+        return value
 
 
 class CategoryWithDepthSerializer(CategorySerializer):

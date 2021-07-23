@@ -43,6 +43,6 @@ class CategoryManager(models.Manager):
         depth = depth or 2000
         return self.raw(self.PARENT_LIST_QUERY, [category_id, abs(depth) + 1])
 
-    def child_tree(self, category_id, depth=None):
+    def child_list(self, category_id, depth=None):
         depth = depth or 2000
         return self.raw(self.CHILD_TREE_QUERY, [category_id, depth - 1])

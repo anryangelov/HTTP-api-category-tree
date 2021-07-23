@@ -1,4 +1,4 @@
-from django.core.serializers import serialize
+from django.http import Http404
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
@@ -47,4 +47,12 @@ class CategoryViewSet(ModelViewSet):
 
     @action(detail=True, methods=['GET'])
     def children(self, request, pk):
-        return self.get_categories(request, pk, Category.objects.child_tree)
+        return self.get_categories(request, pk, Category.objects.child_list)
+
+    @action(detail=True, methods=['GET'])
+    def parent(self, request, pk):
+        category = Category.objects.get(category_id=pk)
+        if not category.parent_category:
+            raise Http404
+        data = self.serializer_class(category.parent_category).data
+        return Response(data)
