@@ -79,12 +79,17 @@ class TestCategoryViewSet(APITestCase):
 
     def test_create_category(self):
         Category.objects.all().delete()
+        cat = Category.objects.create(name='some name')
         url = reverse('category-list')
-        data = {'name': 'foo'}
+        data = {'name': 'foo', 'similarities': [cat.pk]}
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(Category.objects.filter(name='foo').count(), 1)
-        self.assertEqual(Category.objects.count(), 1)
+        new_categories = Category.objects.filter(name='foo')
+        self.assertEqual(new_categories.count(), 1)
+        self.assertEqual(Category.objects.count(), 2)
+        self.assertEqual(list(new_categories[0].similarities.all()), [cat])
+        self.assertEqual(list(cat.similarities.all()), [new_categories[0]])
+        import IPython; IPython.embed()
 
     def test_put_image_for_existing_category(self):
         cat = Category.objects.create(name='bro')

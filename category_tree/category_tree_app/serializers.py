@@ -7,11 +7,21 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = "__all__"
+        fields = [
+            "category_id",
+            "parent_category_id",
+            "image",
+            "name",
+            "description",
+            "similarities",
+        ]
 
 
 class CategoryWithDepthSerializer(CategorySerializer):
     depth = serializers.IntegerField()
+
+    class Meta(CategorySerializer.Meta):
+        fields = CategorySerializer.Meta.fields + ["depth"]
 
 
 class CategoryImageSerializer(serializers.ModelSerializer):

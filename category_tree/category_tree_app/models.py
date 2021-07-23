@@ -11,9 +11,13 @@ class Category(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='uploads/%Y/%m/%d/', blank=True)
-    similarity = models.ManyToManyField('self', blank=True)
+    similarities = models.ManyToManyField('self', blank=True)
 
     objects = CategoryManager()
 
     def __str__(self):
         return f'{self.pk}_{self.name}'
+
+    def save(self, *args, **kwargs):
+        # TODO check if it is in one transaction
+        return super().save(*args, **kwargs)
