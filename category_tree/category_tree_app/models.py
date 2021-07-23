@@ -16,8 +16,5 @@ class Category(models.Model):
     objects = CategoryManager()
 
     def __str__(self):
-        return f'{self.pk}_{self.name}'
+        return self.name
 
-    def save(self, *args, **kwargs):
-        # TODO check if it is in one transaction
-        return super().save(*args, **kwargs)
