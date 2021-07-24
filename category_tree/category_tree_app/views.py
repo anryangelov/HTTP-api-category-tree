@@ -12,6 +12,7 @@ from category_tree_app.serializers import (
     CategoryWithDepthSerializer,
 )
 from category_tree_app.models import Category
+from category_tree_app.utils import make_tree_for_category_list
 
 
 class CategoryViewSet(ModelViewSet):
@@ -39,6 +40,8 @@ class CategoryViewSet(ModelViewSet):
 
         categories = raw_queryset_obj(pk, depth)
         data = CategoryWithDepthSerializer(categories, many=True).data
+        if tree:
+            data = make_tree_for_category_list(data, field_name='children')
         return Response(data)
 
     @action(detail=True, methods=['GET'])

@@ -1,4 +1,27 @@
 from collections import defaultdict
+from collections import deque
+
+
+def make_tree_for_category_list(categories: list, field_name):
+
+    if not categories:
+        return {}
+
+    categ_by_parent = defaultdict(list)
+    for c in categories:
+        categ_by_parent[c['parent_category']].append(c)
+
+    root = categories[0]
+    root[field_name] = categ_by_parent.pop(root['category_id'], [])
+    deq = deque(root[field_name])
+
+    while deq:
+        cat = deq.popleft()
+        children = categ_by_parent.pop(cat['category_id'], [])
+        cat[field_name] = children
+        deq.extend(children)
+
+    return root
 
 
 def is_vertex_part_of_island(new_vertex, island):
@@ -35,25 +58,3 @@ def get_islands_categories(islands_vertexes):
             categories.update(vertex)
         islands.append(categories)
     return islands
-
-
-def get_graph(island_vertexes):
-    graph = defaultdict(list)
-    for p1, p2 in sorted(list(island_vertexes)):
-        graph[p1].append(p2)
-    return graph
-
-
-def bfs(node):
-    visited = set()
-    queue = []
-    visited.add(node)
-    queue.append(node)
-
-    while queue:
-        s = queue.pop(0) 
-
-        for neighbour in graph[s]:
-            if neighbour not in visited:
-                visited.add(neighbour)
-                queue.append(neighbour)
