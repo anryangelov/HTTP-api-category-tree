@@ -196,4 +196,9 @@ get rabbit islands through management command
     ['A', 'B', 'C', 'D']
     ['G', 'M']
 
+get longest rabbit hole
+
+    $ ./manage.py get_longest_rabbit_hole
+    ['C', 'D', 'B', 'W']
+    ['A', 'D', 'B', 'W']
 
