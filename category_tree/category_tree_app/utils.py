@@ -24,50 +24,40 @@ def make_tree_for_category_list(categories: list, field_name):
     return root
 
 
-def is_vertex_part_of_island(new_vertex, island):
-    for vertex in island:
-        if set(new_vertex).intersection(vertex):
-            return True
-    return False
-
-
-def is_vertex_part_of_any_island(new_vertex, islands):
-    if not islands:
-        return False
-    for island in islands:
-        if is_vertex_part_of_island(new_vertex, island):
-            island.add(new_vertex)
-            return True
-    return False
-
-
-def get_islands_vertexes(similarities):
-    islands = []
-    for new_vertex in sorted(list(similarities)):
-        if not is_vertex_part_of_any_island(new_vertex, islands):
-            new_island = {new_vertex}
-            islands.append(new_island)
-    return islands
-
-
-def get_islands_categories(islands_vertexes):
-    islands = []
-    for island_vertexes in islands_vertexes:
-        categories = set()
-        for vertex in island_vertexes:
-            categories.update(vertex)
-        islands.append(categories)
-    return islands
-
-
-def get_graph(island_vertexes):
+def get_graph(similarities):
     graph = defaultdict(list)
-    for p1, p2 in sorted(list(island_vertexes)):
+    for p1, p2 in similarities:
         graph[p1].append(p2)
     return graph
 
 
-def all_shortest_paths_for_category_in_island(graph, category_id):
+def get_visited(graph, category_id):
+    '''bfs'''
+    visited = set()
+    queue = deque()
+    queue.append(category_id)
+    while queue:
+        category_id = queue.popleft()
+        if category_id not in visited:
+            visited.add(category_id)
+            new_categories = graph.get(category_id, [])
+            queue.extend(new_categories)
+    return visited
+
+
+def get_islands_categories(similarities):
+    islands = []
+    graph = get_graph(similarities)
+    searched = set()
+    for category_id in graph.keys():
+        if category_id not in searched:
+            categories = get_visited(graph, category_id)
+            islands.append(categories)
+            searched.update(categories)
+    return islands
+
+
+def all_shortest_paths_for_category(graph, category_id):
     '''essensally bread first search'''
     paths = []
     path = (category_id,)
@@ -103,13 +93,11 @@ def remove_reverse_paths(paths):
 
 
 def get_longest_rabbit_holes(similarities):
-    islands_longest_paths = []
-    islands_vertexes = get_islands_vertexes(similarities)
-    for island_vertexes in islands_vertexes:
-        graph = get_graph(island_vertexes)
-        for category_id in graph.keys():
-            paths = all_shortest_paths_for_category_in_island(graph, category_id)
-            longest_paths = get_longest_lists(paths)
-            islands_longest_paths.extend(longest_paths)
+    graph = get_graph(similarities)
+    longest_paths = []
+    for category_id in graph.keys():
+        paths = all_shortest_paths_for_category(graph, category_id)
+        paths = get_longest_lists(paths)
+        longest_paths.extend(paths)
+    return remove_reverse_paths(get_longest_lists(longest_paths))
 
-    return remove_reverse_paths(get_longest_lists(islands_longest_paths))

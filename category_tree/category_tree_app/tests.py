@@ -10,7 +10,12 @@ from PIL import Image
 
 from category_tree_app.models import Category
 from category_tree_app import utils
-
+from category_tree_app.management.commands.get_rabbit_islands import (
+    get_rabbit_islands
+)
+from category_tree_app.management.commands.get_longest_rabbit_hole import (
+    get_longest_rabbit_holes_from_db
+)
 
 def add_data(directory):
     cat = Category.objects.create(
@@ -130,63 +135,81 @@ class TestCategoryViewSet(APITestCase):
         self.assertEqual(respose.json()[0]['category_id'], 93)
 
 
-class TestUtils(TestCase):
-    island1_similarities = set([
-        (1,2),
-        (12,1),
-        (12,2),
-        (2,4),
-        (2,1),
-        (2,12),
-        (1,12),
-        (4,2),
-    ])
-    island2_similarities = set([
-        (5,7),
-        (5,8),
-        (7,5),
-        (7,6),
-        (8,5),
-        (8,6),
-        (8,9),
-        (6,9),
-        (6,8),
-        (6,7),
-        (9,6),
-        (9,8),
-        (9,13),
-        (13,9),
-    ])
-    island3_similarities = set([
-        (11,3),
-        (11,14),
-        (3,11),
-        (3,10),
-        (10,3),
-        (10,14),
-        (14,11),
-        (14,13),
-    ])
+class TestCategorySimilarities(APITestCase):
 
-    def setUp(self):
-        self.all_similarities = set()
-        self.expected_islands = (
-            self.island1_similarities,
-            self.island2_similarities,
-            self.island3_similarities,
+    graph_1 = {
+        'W': ['B', 'D'],
+        'B': ['W', 'T', 'D'],
+        'D': ['W', 'B'],
+        'T': ['B'],
+    }
+
+    graph_2 = {
+        'C': ['A', 'P', 'K'],
+        'K': ['C'],
+        'M': ['V'],
+        'V': ['P', 'M', 'A'],
+        'P': ['V', 'C'],
+        'A': ['V', 'C'],
+    }
+
+    graph_3 = {
+        'J': ['Z'],
+        'R': ['G', 'F'],
+        'F': ['R', 'I'],
+        'G': ['R', 'U'],
+        'I': ['F', 'S'],
+        'U': ['G',],
+        'E': ['S'],
+        'S': ['I', 'X', 'E'],
+        'X': ['S', 'H', 'Q'],
+        'H': ['X'],
+        'Q': ['X', 'Z'],
+        'Z': ['Q', 'J'],
+    }
+
+    def add_island(self, graph):
+        Category.objects.bulk_create(
+            [
+                Category(name=name) for name in graph.keys()
+            ]
         )
-        for similarities in self.expected_islands:
-            self.all_similarities.update(similarities)
+        name_id_map = {c.name: c.category_id for c in Category.objects.all()}
+        for name, similarities in graph.items():
+            cat = Category.objects.get(name=name)
+            for s in similarities:
+                cat.similarities.add(name_id_map[s])
 
-    def test_get_islands_vetexes(self):
-        got_islands = utils.get_islands_vertexes(self.all_similarities)
-        #import IPython; IPython.embed()
-        for got_island in got_islands:
-            self.assertIn(got_island, self.expected_islands)
+    def test_find_islands_with_one_island(self):
+        self.add_island(self.graph_1)
+        list_categories = list(get_rabbit_islands())
+        self.assertEqual(len(list_categories), 1)
+        got_categories = set(list_categories[0])
+        expected_categories = set(self.graph_1)
+        self.assertEqual(got_categories, expected_categories)
 
-    def test_get_islands_categories(self):
-        islands_categories = utils.get_islands_categories(self.expected_islands)
-        self.assertEqual(
-            islands_categories,
-            [{1, 2, 4, 12}, {5, 6, 7, 8, 9, 13}, {3, 10, 11, 13, 14}]
-        )
+    def test_find_islands_with_tree_island(self):
+        for graph in (self.graph_1, self.graph_2, self.graph_3):
+            self.add_island(graph)
+
+        got_categories = set([
+            tuple(sorted(island)) for island in get_rabbit_islands()
+        ])
+        self.assertEqual(len(got_categories), 3)
+
+        expected_categories = set([
+            tuple(sorted(self.graph_1)),
+            tuple(sorted(self.graph_2)),
+            tuple(sorted(self.graph_3)),
+        ])
+
+        self.assertEqual(got_categories, expected_categories)
+
+    def test_get_longest_rabbit_hole(self):
+        for graph in (self.graph_1, self.graph_2, self.graph_3):
+            self.add_island(graph)
+        got_longest_rabbit_holes = list(get_longest_rabbit_holes_from_db())
+        self.assertEqual(len(got_longest_rabbit_holes), 1)
+        got = set(got_longest_rabbit_holes[0])
+        expected = {'J', 'Z', 'Q', 'X', 'S', 'I', 'F', 'R', 'G', 'U'}
+        self.assertEqual(got, expected)
